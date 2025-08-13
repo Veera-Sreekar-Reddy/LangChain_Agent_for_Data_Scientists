@@ -1,0 +1,10 @@
+langchain
+langchain-community
+langchain-core
+pandas
+scikit-learn
+matplotlib
+seaborn
+ollama
+streamlit
+faiss-cpu
