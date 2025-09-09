@@ -1,32 +1,40 @@
-from langchain.agents import Tool, initialize_agent
+from langchain.agents import initialize_agent, Tool
 from langchain_community.llms import Ollama
+from tools import DataScienceTools
 
-def create_agent(ds_tools):
-    llm = Ollama(model="codellama")
+def create_agent():
+    ds_tools = DataScienceTools()
 
-    tool_list = [
+    tools = [
         Tool(
-            name="Setup RAG",
-            func=ds_tools.setup_rag,
-            description="Create a RAG index from loaded CSV"
+            name="Load Data",
+            func=lambda query: ds_tools.load_data(query),
+            description="Load CSV dataset by providing file path"
         ),
         Tool(
-            name="Search Data",
-            func=ds_tools.search_data,
-            description="Search CSV data using RAG"
+            name="Explore Data",
+            func=lambda query: ds_tools.explore_data(),
+            description="Summarize dataset columns and first few rows"
         ),
         Tool(
-            name="AutoML",
-            func=ds_tools.auto_ml,
-            description="Automatically detect ML problem and train the best model"
+            name="Clean Data",
+            func=lambda query: ds_tools.clean_data(),
+            description="Clean dataset (handle missing values, encode categoricals)"
+        ),
+        Tool(
+            name="Suggest Model",
+            func=lambda query: ds_tools.suggest_model(query.strip()),
+            description="Suggest ML model. Pass target column name as query string"
         ),
     ]
 
+    llm = Ollama(model="codellama")
+
     agent = initialize_agent(
-        tools=tool_list,
-        llm=llm,
+        tools,
+        llm,
         agent="zero-shot-react-description",
-        handle_parsing_errors=True
+        verbose=True
     )
 
-    return agent
+    return agent, ds_tools
