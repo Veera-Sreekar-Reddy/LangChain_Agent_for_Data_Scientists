@@ -1,29 +1,60 @@
-# Local AI-Powered Data Science Assistant
+# 🤖 AI-Powered Data Science Assistant
 
-This is a **Streamlit-based application** that allows users to interact with their CSV datasets using natural language.
-The app leverages [CodeLLaMA](https://ollama.com/library/codellama) running locally via [Ollama](https://ollama.com) along with [LangChain](https://www.langchain.com/) and **RAG** to explore, clean, and suggest machine learning models for uploaded data.
+This is an **enhanced Streamlit-based application** that allows users to interact with their CSV datasets using natural language.
+The app leverages [CodeLLaMA](https://ollama.com/library/codellama) running locally via [Ollama](https://ollama.com) along with [LangChain](https://www.langchain.com/) and advanced analytics to explore, clean, visualize, and build machine learning models for uploaded data.
 
 ---
 
 ## 🚀 Features
 
-- 📂 Upload a CSV file and preview the dataset.
-- 🔍 Automatic dataset exploration (columns, dtypes, summary, head).
-- 🧹 Data cleaning (handles missing values, encodes categorical variables).
-- 🤖 ML model suggestions (classification or regression based on target column).
-- 💬 Ask natural language questions about your data.
-- 📊 Auto-generates Python code using CodeLLaMA and executes securely.
-- 🧠 Supports large datasets with **Retrieval-Augmented Generation (RAG)**.
+### 📊 Overview & Analytics
+- 📂 Upload CSV files with instant statistics
+- 🔍 Comprehensive dataset exploration (columns, dtypes, missing values)
+- 📈 Automated statistics dashboard
+- 📋 One-click EDA reports with `ydata-profiling`
+- 🧹 Data cleaning (handles missing values, encodes categorical variables)
+
+### 📈 Interactive Visualizations (10+ types)
+- **Scatter plots** with color coding
+- **3D scatter plots** for multivariate analysis
+- **Box plots** and **Violin plots**
+- **Histograms** and distribution plots
+- **Correlation heatmaps**
+- **Pair plots** (scatter matrix)
+- **Line plots** and **Bar plots**
+- All interactive with Plotly (zoom, pan, hover)
+
+### 🤖 Machine Learning
+- **Multi-model comparison**: Random Forest, XGBoost, Logistic/Linear Regression
+- **Visual results**: Confusion matrices, prediction plots
+- **Performance metrics**: Accuracy, R², MSE, MAE
+- **Training time tracking**
+- AI-powered model suggestions
+
+### 💬 AI Assistant
+- Natural language queries with CodeLLaMA
+- Auto-generates visualizations from text
+- Context-aware responses
+- Smart tool selection
+
+### 📥 Export Capabilities
+- Download cleaned CSV
+- Export to Excel (.xlsx)
+- Generate summary reports (TXT)
+- Download comprehensive HTML EDA reports
 
 ---
 
 ## ⚙️ Tech Stack
 
 - **Python 3.8+**
-- **Streamlit**
-- **LangChain**
-- **Ollama + CodeLLaMA**
-- **scikit-learn, pandas, faiss**
+- **Frontend**: Streamlit (with tabs and advanced layouts)
+- **AI/ML**: LangChain + CodeLLaMA (via Ollama)
+- **Visualization**: Plotly (interactive), Matplotlib, Seaborn
+- **Machine Learning**: scikit-learn, XGBoost, SHAP
+- **Data Processing**: pandas, numpy, scipy
+- **EDA Reports**: ydata-profiling
+- **Export**: openpyxl (Excel), io (CSV)
 
 ---
 

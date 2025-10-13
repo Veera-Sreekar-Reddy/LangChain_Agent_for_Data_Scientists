@@ -5,3 +5,12 @@ pandas
 scikit-learn
 faiss-cpu
 ollama
+matplotlib
+seaborn
+ydata-profiling
+plotly
+xgboost
+shap
+scipy
+imbalanced-learn
+openpyxl
