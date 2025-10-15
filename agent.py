@@ -7,6 +7,16 @@ def create_agent():
 
     tools = [
         Tool(
+            name="Summarize Data",
+            func=lambda query: ds_tools.summarize_data(),
+            description="Use when user asks to 'summarize data', 'describe dataset', 'overview', 'show summary'. Provides dataset statistics. Input: empty string or ''."
+        ),
+        Tool(
+            name="Analyze Correlations",
+            func=lambda query: ds_tools.analyze_correlations(),
+            description="IMPORTANT: Use this tool when user asks to 'explain correlations', 'analyze correlations', 'show correlations', 'correlation analysis', or 'relationships between variables'. This analyzes correlations between numeric columns. Input: empty string or ''."
+        ),
+        Tool(
             name="Explore Data",
             func=lambda query: ds_tools.explore_data(),
             description="Use this to view the dataset columns, data types, and first few rows. Input should be empty string."
@@ -28,7 +38,8 @@ def create_agent():
         ),
     ]
 
-    llm = Ollama(model="codellama")
+    # Use mistral instead of codellama for better reasoning
+    llm = Ollama(model="mistral", temperature=0.1)
 
     agent = initialize_agent(
         tools,
@@ -36,7 +47,9 @@ def create_agent():
         agent="zero-shot-react-description",
         verbose=True,
         handle_parsing_errors=True,
-        max_iterations=3
+        max_iterations=5,  # Reduced to prevent loops
+        max_execution_time=60,  # Reduced timeout
+        early_stopping_method="generate"  # Stop gracefully on errors
     )
 
     return agent, ds_tools

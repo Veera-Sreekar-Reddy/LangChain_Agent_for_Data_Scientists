@@ -15,11 +15,18 @@ from ydata_profiling import ProfileReport
 st.set_page_config(page_title="AI Data Science Assistant", layout="wide", initial_sidebar_state="expanded")
 
 st.title("🤖 AI-Powered Data Science Assistant")
-st.caption("Local LLM with CodeLLaMA + LangChain + Advanced Analytics")
+st.caption("Local LLM with Mistral + LangChain + Advanced Analytics")
 
 # -----------------------------
 # Session State Initialization
 # -----------------------------
+# Agent version - increment this to force agent reload
+AGENT_VERSION = "3.0"
+
+if "agent_version" not in st.session_state or st.session_state.agent_version != AGENT_VERSION:
+    st.session_state.agent, st.session_state.ds_tools = create_agent()
+    st.session_state.agent_version = AGENT_VERSION
+    
 if "agent" not in st.session_state:
     st.session_state.agent, st.session_state.ds_tools = create_agent()
 if "retriever_engine" not in st.session_state:
@@ -334,23 +341,10 @@ if st.session_state.df is not None:
             if query:
                 try:
                     with st.spinner("🤖 Thinking..."):
-                        # Check if query is asking for a plot
-                        plot_keywords = ['plot', 'chart', 'graph', 'visualiz', 'histogram', 'scatter', 'box', 'bar', 'heatmap', 'correlation']
-                        is_plot_query = any(keyword in query.lower() for keyword in plot_keywords)
-                        
-                        if is_plot_query:
-                            result = st.session_state.ds_tools.generate_plot(query)
-                            
-                            if isinstance(result, Figure):
-                                st.success("✅ Plot generated!")
-                                st.pyplot(result)
-                                plt.close(result)
-                            else:
-                                st.warning(str(result))
-                        else:
-                            response = st.session_state.agent.run(query)
-                            st.success("✅ Complete!")
-                            st.text_area("Response", response, height=300)
+                        # Let the agent intelligently decide which tool to use
+                        response = st.session_state.agent.run(query)
+                        st.success("✅ Complete!")
+                        st.text_area("Response", response, height=300)
                             
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")

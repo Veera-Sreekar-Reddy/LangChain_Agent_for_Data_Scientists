@@ -39,6 +39,46 @@ class DataScienceTools:
         info += f"First 5 rows:\n{self.df.head().to_string()}"
         return info
     
+    def summarize_data(self):
+        if self.df is None:
+            return "⚠️ No data loaded."
+        
+        summary = "📊 DATA SUMMARY\n" + "="*50 + "\n\n"
+        summary += f"Dataset Shape: {self.df.shape[0]} rows × {self.df.shape[1]} columns\n\n"
+        
+        # Column information
+        summary += "Columns:\n"
+        for col in self.df.columns:
+            summary += f"  - {col} ({self.df[col].dtype})\n"
+        
+        # Missing values
+        missing = self.df.isnull().sum()
+        if missing.sum() > 0:
+            summary += f"\n⚠️ Missing Values: {missing.sum()} total\n"
+            for col in missing[missing > 0].index:
+                summary += f"  - {col}: {missing[col]} ({missing[col]/len(self.df)*100:.1f}%)\n"
+        else:
+            summary += "\n✅ No missing values\n"
+        
+        # Numeric summary
+        numeric_cols = self.df.select_dtypes(include=['number']).columns
+        if len(numeric_cols) > 0:
+            summary += f"\n📈 Numeric Columns Summary ({len(numeric_cols)} columns):\n"
+            summary += self.df[numeric_cols].describe().to_string()
+        
+        # Categorical summary
+        cat_cols = self.df.select_dtypes(include=['object']).columns
+        if len(cat_cols) > 0:
+            summary += f"\n\n📋 Categorical Columns ({len(cat_cols)} columns):\n"
+            for col in cat_cols[:5]:  # Show first 5 categorical columns
+                summary += f"  - {col}: {self.df[col].nunique()} unique values\n"
+        
+        # Duplicates
+        duplicates = self.df.duplicated().sum()
+        summary += f"\n🔄 Duplicate Rows: {duplicates}\n"
+        
+        return summary
+    
     def get_column_info(self, column_name: str):
         if self.df is None:
             return "⚠️ No data loaded."
@@ -57,6 +97,66 @@ class DataScienceTools:
             info += f"\nTop 5 values:\n{col.value_counts().head().to_string()}"
         
         return info
+    
+    def analyze_correlations(self):
+        if self.df is None:
+            return "⚠️ No data loaded."
+        
+        numeric_cols = self.df.select_dtypes(include=['number']).columns.tolist()
+        
+        if len(numeric_cols) < 2:
+            return "⚠️ Need at least 2 numeric columns for correlation analysis."
+        
+        # Calculate correlation matrix
+        corr_matrix = self.df[numeric_cols].corr()
+        
+        analysis = "📊 CORRELATION ANALYSIS\n" + "="*60 + "\n\n"
+        analysis += f"Analyzing {len(numeric_cols)} numeric columns: {', '.join(numeric_cols)}\n\n"
+        
+        # Find strong correlations (> 0.7 or < -0.7)
+        analysis += "🔥 STRONG CORRELATIONS (|r| > 0.7):\n"
+        strong_corrs = []
+        for i in range(len(numeric_cols)):
+            for j in range(i+1, len(numeric_cols)):
+                corr_val = corr_matrix.iloc[i, j]
+                if abs(corr_val) > 0.7:
+                    col1, col2 = numeric_cols[i], numeric_cols[j]
+                    strong_corrs.append((col1, col2, corr_val))
+                    direction = "positive" if corr_val > 0 else "negative"
+                    analysis += f"  • {col1} ↔ {col2}: {corr_val:.3f} ({direction})\n"
+        
+        if not strong_corrs:
+            analysis += "  None found\n"
+        
+        # Moderate correlations (0.5 - 0.7 or -0.5 to -0.7)
+        analysis += "\n📈 MODERATE CORRELATIONS (0.5 < |r| < 0.7):\n"
+        moderate_corrs = []
+        for i in range(len(numeric_cols)):
+            for j in range(i+1, len(numeric_cols)):
+                corr_val = corr_matrix.iloc[i, j]
+                if 0.5 < abs(corr_val) <= 0.7:
+                    col1, col2 = numeric_cols[i], numeric_cols[j]
+                    moderate_corrs.append((col1, col2, corr_val))
+                    direction = "positive" if corr_val > 0 else "negative"
+                    analysis += f"  • {col1} ↔ {col2}: {corr_val:.3f} ({direction})\n"
+        
+        if not moderate_corrs:
+            analysis += "  None found\n"
+        
+        # Full correlation matrix
+        analysis += "\n📋 FULL CORRELATION MATRIX:\n"
+        analysis += corr_matrix.to_string()
+        
+        # Interpretation guide
+        analysis += "\n\n💡 INTERPRETATION GUIDE:\n"
+        analysis += "  • |r| > 0.7: Strong relationship\n"
+        analysis += "  • 0.5 < |r| < 0.7: Moderate relationship\n"
+        analysis += "  • 0.3 < |r| < 0.5: Weak relationship\n"
+        analysis += "  • |r| < 0.3: Very weak/no relationship\n"
+        analysis += "  • Positive r: Variables increase together\n"
+        analysis += "  • Negative r: One increases as other decreases\n"
+        
+        return analysis
 
     def clean_data(self):
         if self.df is None:
