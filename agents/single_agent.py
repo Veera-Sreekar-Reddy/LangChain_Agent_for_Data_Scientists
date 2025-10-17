@@ -1,8 +1,13 @@
+"""
+Single Agent - Mistral for general data science tasks
+"""
 from langchain.agents import initialize_agent, Tool
 from langchain_community.llms import Ollama
 from tools import DataScienceTools
 
+
 def create_agent():
+    """Create single Mistral agent with all data science tools"""
     ds_tools = DataScienceTools()
 
     tools = [
@@ -53,3 +58,4 @@ def create_agent():
     )
 
     return agent, ds_tools
+

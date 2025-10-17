@@ -1,3 +1,6 @@
+"""
+Data Science Tools - Analysis, visualization, and ML capabilities
+"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,8 +13,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import (accuracy_score, mean_squared_error, r2_score,
                              confusion_matrix, classification_report,
                              mean_absolute_error)
-import io
-import sys
+from .data_cleaner import DataCleaner
 
 try:
     from xgboost import XGBClassifier, XGBRegressor
@@ -19,18 +21,24 @@ try:
 except ImportError:
     XGBOOST_AVAILABLE = False
 
+
 class DataScienceTools:
+    """Main class for data science operations"""
+    
     def __init__(self):
         self.df = None
 
     def load_data(self, file_path: str):
+        """Load CSV data"""
         self.df = pd.read_csv(file_path)
         return f"✅ Data loaded: {self.df.shape[0]} rows, {self.df.shape[1]} columns."
 
     def get_dataframe(self):
+        """Return the DataFrame"""
         return self.df
 
     def explore_data(self):
+        """Explore dataset - show columns, types, and sample rows"""
         if self.df is None:
             return "⚠️ No data loaded."
         info = f"Columns: {list(self.df.columns)}\n"
@@ -40,6 +48,7 @@ class DataScienceTools:
         return info
     
     def summarize_data(self):
+        """Generate comprehensive data summary"""
         if self.df is None:
             return "⚠️ No data loaded."
         
@@ -70,7 +79,7 @@ class DataScienceTools:
         cat_cols = self.df.select_dtypes(include=['object']).columns
         if len(cat_cols) > 0:
             summary += f"\n\n📋 Categorical Columns ({len(cat_cols)} columns):\n"
-            for col in cat_cols[:5]:  # Show first 5 categorical columns
+            for col in cat_cols[:5]:
                 summary += f"  - {col}: {self.df[col].nunique()} unique values\n"
         
         # Duplicates
@@ -80,6 +89,7 @@ class DataScienceTools:
         return summary
     
     def get_column_info(self, column_name: str):
+        """Get detailed information about a specific column"""
         if self.df is None:
             return "⚠️ No data loaded."
         if column_name not in self.df.columns:
@@ -99,6 +109,7 @@ class DataScienceTools:
         return info
     
     def analyze_correlations(self):
+        """Analyze correlations between numeric columns"""
         if self.df is None:
             return "⚠️ No data loaded."
         
@@ -113,7 +124,7 @@ class DataScienceTools:
         analysis = "📊 CORRELATION ANALYSIS\n" + "="*60 + "\n\n"
         analysis += f"Analyzing {len(numeric_cols)} numeric columns: {', '.join(numeric_cols)}\n\n"
         
-        # Find strong correlations (> 0.7 or < -0.7)
+        # Find strong correlations
         analysis += "🔥 STRONG CORRELATIONS (|r| > 0.7):\n"
         strong_corrs = []
         for i in range(len(numeric_cols)):
@@ -128,7 +139,7 @@ class DataScienceTools:
         if not strong_corrs:
             analysis += "  None found\n"
         
-        # Moderate correlations (0.5 - 0.7 or -0.5 to -0.7)
+        # Moderate correlations
         analysis += "\n📈 MODERATE CORRELATIONS (0.5 < |r| < 0.7):\n"
         moderate_corrs = []
         for i in range(len(numeric_cols)):
@@ -158,19 +169,25 @@ class DataScienceTools:
         
         return analysis
 
-    def clean_data(self):
+    def clean_data(self, level='standard'):
+        """Basic auto-clean using DataCleaner"""
         if self.df is None:
             return "⚠️ No data loaded."
-        df_clean = self.df.copy()
-        # Fill numeric missing values
-        df_clean.fillna(df_clean.mean(numeric_only=True), inplace=True)
-        # Encode categorical columns
-        for col in df_clean.select_dtypes(include=["object"]).columns:
-            df_clean[col] = LabelEncoder().fit_transform(df_clean[col].astype(str))
-        self.df = df_clean
-        return "✅ Data cleaned (missing filled, categorical encoded)."
+        
+        cleaner = DataCleaner(self.df)
+        self.df = cleaner.auto_clean(level=level)
+        report = cleaner.get_cleaning_report()
+        
+        return report
+    
+    def get_advanced_cleaner(self):
+        """Get DataCleaner instance for advanced cleaning"""
+        if self.df is None:
+            return None
+        return DataCleaner(self.df)
 
     def suggest_model(self, target: str):
+        """Suggest appropriate ML model for target column"""
         if self.df is None:
             return "⚠️ No data loaded."
         if target not in self.df.columns:
@@ -206,15 +223,14 @@ class DataScienceTools:
             return f"🤖 Suggested Model: RandomForestRegressor (MSE: {mse:.2f})"
     
     def generate_plot(self, query: str):
-        """Generate and execute code for data visualization"""
+        """Generate visualization from natural language query"""
         if self.df is None:
             return "⚠️ No data loaded. Please upload a dataset first."
         
-        # Generate the appropriate plot code based on the query
         query_lower = query.lower()
         
         try:
-            plt.clf()  # Clear any existing plots
+            plt.clf()
             fig, ax = plt.subplots(figsize=(10, 6))
             
             # Extract column names from query
@@ -280,7 +296,6 @@ class DataScienceTools:
                     sns.heatmap(corr, annot=True, cmap='coolwarm', center=0, ax=ax)
                     ax.set_title('Correlation Heatmap')
                 else:
-                    # Use all numeric columns
                     numeric_cols = self.df.select_dtypes(include=['number']).columns
                     corr = self.df[numeric_cols].corr()
                     sns.heatmap(corr, annot=True, cmap='coolwarm', center=0, ax=ax)
@@ -307,9 +322,7 @@ class DataScienceTools:
             return f"❌ Error generating plot: {str(e)}"
     
     def train_models(self, df, target_column, model_types, test_size=0.2):
-        """
-        Train multiple models and compare their performance
-        """
+        """Train and compare multiple ML models"""
         results = {}
         
         # Prepare data
@@ -413,3 +426,4 @@ class DataScienceTools:
                 }
         
         return results
+

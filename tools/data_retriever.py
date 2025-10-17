@@ -1,13 +1,20 @@
+"""
+Data Retriever - FAISS-based data retrieval
+"""
 import pandas as pd
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain.docstore.document import Document
 
+
 class DataRetriever:
+    """Data retrieval using FAISS vector store"""
+    
     def __init__(self):
         self.vectorstore = None
 
     def index_dataframe(self, df: pd.DataFrame):
+        """Index DataFrame for retrieval"""
         docs = []
         for col in df.columns:
             docs.append(Document(page_content=f"Column: {col}, dtype: {df[col].dtype}, examples: {df[col].head(5).tolist()}"))
@@ -21,6 +28,7 @@ class DataRetriever:
         return "✅ Dataset indexed for retrieval."
 
     def get_retriever(self):
+        """Get retriever for querying"""
         if self.vectorstore is None:
             raise ValueError("⚠️ Dataset not indexed yet. Please upload a CSV first.")
         return self.vectorstore.as_retriever(search_kwargs={"k": 3})
