@@ -49,6 +49,8 @@ if "retriever_engine" not in st.session_state:
     st.session_state.retriever_engine = DataRetriever()
 if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 if "retriever_tool" not in st.session_state:
     st.session_state.retriever_tool = None
 if "df" not in st.session_state:
@@ -554,69 +556,201 @@ if st.session_state.df is not None:
     
     # ===== TAB 5: AI ASSISTANT =====
     with tab5:
-        st.header("AI Assistant Chat")
+        st.header("💬 AI Assistant Chat")
         
-        # Show current mode
-        current_mode = st.session_state.get('agent_mode', 'Multi-Agent (Recommended)')
-        if current_mode == "Multi-Agent (Recommended)":
-            st.success("🤖 **Multi-Agent Mode**: Mistral (reasoning) + CodeLLaMA (code generation)")
-        else:
-            st.info("🤖 **Single Agent Mode**: Mistral only")
+        # Show current mode and controls in columns
+        mode_col1, mode_col2 = st.columns([3, 1])
         
-        st.markdown("""
-        💡 **Examples:**
-        - *"Summarize the data"* → Mistral will analyze
-        - *"Show correlations"* → Mistral will compute
-        - *"Create scatter plot of price vs duration"* → CodeLLaMA will generate code
-        - *"Plot histogram of age"* → CodeLLaMA will generate code
-        """)
+        with mode_col1:
+            current_mode = st.session_state.get('agent_mode', 'Multi-Agent (Recommended)')
+            if current_mode == "Multi-Agent (Recommended)":
+                st.info("🤖 **Multi-Agent Mode**: Mistral (reasoning) + CodeLLaMA (code generation)")
+            else:
+                st.info("🤖 **Single Agent Mode**: Mistral only")
         
-        query = st.text_input(
-            "Your question:",
-            placeholder="e.g., 'Create a scatter plot' or 'Explain correlations'"
-        )
+        with mode_col2:
+            if st.button("🗑️ Clear Chat", key="clear_chat", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
         
-        if st.button("🤖 Ask Assistant", key="ai_assistant_ask", use_container_width=True):
-            if query:
-                try:
-                    # Update DataFrame in agents
-                    if current_mode == "Multi-Agent (Recommended)":
-                        st.session_state.supervisor.set_dataframe(st.session_state.df)
+        st.markdown("---")
+        
+        # Auto-scroll to bottom script
+        if len(st.session_state.chat_history) > 0:
+            st.markdown("""
+            <script>
+                var element = document.querySelector('[data-testid="stVerticalBlock"]');
+                if (element) {
+                    element.scrollTop = element.scrollHeight;
+                }
+            </script>
+            """, unsafe_allow_html=True)
+        
+        # Chat history container with custom styling
+        chat_container = st.container()
+        
+        with chat_container:
+            if len(st.session_state.chat_history) == 0:
+                st.markdown("""
+                <div style='text-align: center; padding: 40px; color: #666;'>
+                    <h3>👋 Start a conversation!</h3>
+                    <p>Try asking:</p>
+                    <ul style='list-style: none; padding: 0;'>
+                        <li>💡 "Summarize the data"</li>
+                        <li>📊 "Show correlations"</li>
+                        <li>📈 "Create scatter plot of price vs duration"</li>
+                        <li>🎨 "Plot histogram of age"</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Display chat history
+                for i, message in enumerate(st.session_state.chat_history):
+                    if message['role'] == 'user':
+                        # User message with retry button
+                        col1, col2 = st.columns([6, 1])
                         
-                        with st.spinner("🤖 Routing query to appropriate agent..."):
-                            result = st.session_state.supervisor.process_query(query)
+                        with col1:
+                            st.markdown(f"""
+                            <div style='background-color: #e3f2fd; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #2196F3; color: #1a1a1a;'>
+                                <strong style='color: #0d47a1;'>👤 You:</strong><br>
+                                <div style='margin-top: 8px; color: #212121;'>{message['content']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
                         
-                        # Show which agent handled the query
-                        if result['agent'] == 'CodeLLaMA':
-                            st.success(f"✅ Complete! Handled by **CodeLLaMA** (Code Generation)")
-                        else:
-                            st.success(f"✅ Complete! Handled by **Mistral** (Reasoning)")
+                        with col2:
+                            # Add retry button
+                            if st.button("🔄", key=f"retry_{i}", help="Retry this query"):
+                                # Store the query to retry
+                                st.session_state.retry_query = message['content']
+                                st.rerun()
+                    else:
+                        # Assistant message
+                        agent_emoji = "💻" if message.get('agent') == 'CodeLLaMA' else "🧠"
+                        agent_name = message.get('agent', 'Assistant')
                         
                         # Display response with proper formatting
-                        if "```python" in result['response']:
-                            parts = result['response'].split("**Generated Code:**")
-                            if len(parts) > 1:
-                                st.write(parts[0])
-                                st.code(parts[1].split("```python")[1].split("```")[0], language="python")
-                                if "**Output:**" in result['response']:
-                                    output = result['response'].split("**Output:**")[1]
-                                    st.text(output)
-                            else:
-                                st.text_area("Response", result['response'], height=400)
-                        else:
-                            st.text_area("Response", result['response'], height=300)
-                    else:
-                        # Single agent mode
-                        with st.spinner("🤖 Thinking..."):
-                            response = st.session_state.agent.run(query)
-                        st.success("✅ Complete!")
-                        st.text_area("Response", response, height=300)
+                        if "```python" in message['content']:
+                            # Extract code blocks and put everything inside the bubble
+                            parts = message['content'].split("```python")
                             
-                except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
-                    st.info("Try rephrasing your question or use simpler queries")
-            else:
-                st.warning("Please enter a query.")
+                            # Create complete content HTML
+                            content_html = f"<strong style='color: #2e7d32;'>{agent_emoji} {agent_name}:</strong><br>"
+                            content_html += f"<div style='margin-top: 8px; color: #212121;'>{parts[0]}</div>"
+                            
+                            for j, part in enumerate(parts[1:]):
+                                if "```" in part:
+                                    code, rest = part.split("```", 1)
+                                    content_html += f"<pre style='background-color: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 5px; margin: 10px 0; overflow-x: auto;'><code>{code.strip()}</code></pre>"
+                                    if rest.strip():
+                                        content_html += f"<div style='color: #212121;'>{rest}</div>"
+                            
+                            st.markdown(f"""
+                            <div style='background-color: #f5f5f5; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #4CAF50; color: #1a1a1a;'>
+                                {content_html}
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div style='background-color: #f5f5f5; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #4CAF50; color: #1a1a1a;'>
+                                <strong style='color: #2e7d32;'>{agent_emoji} {agent_name}:</strong><br>
+                                <div style='margin-top: 8px; color: #212121;'>{message['content']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        # Display plot if available (ONCE, outside the if-else)
+                        if message.get('plot'):
+                            st.image(message['plot'], caption="Generated Plot", use_column_width=True)
+                        
+                        # Show timestamp
+                        if 'timestamp' in message:
+                            st.caption(f"🕐 {message['timestamp']}")
+        
+        # Input area at bottom
+        st.markdown("---")
+        
+        # Initialize chat input state
+        if 'chat_input_value' not in st.session_state:
+            st.session_state.chat_input_value = ""
+        
+        # Check if there's a retry query to process
+        retry_query = None
+        if 'retry_query' in st.session_state:
+            retry_query = st.session_state.retry_query
+            del st.session_state.retry_query  # Clear it after reading
+        
+        # Create form for better UX (allows Enter key to submit)
+        with st.form(key="chat_form", clear_on_submit=True):
+            input_col1, input_col2 = st.columns([5, 1])
+            
+            with input_col1:
+                query = st.text_input(
+                    "Your message:",
+                    placeholder="Ask me anything about your data... (Press Enter or click Send)",
+                    key="chat_input_form",
+                    label_visibility="collapsed"
+                )
+            
+            with input_col2:
+                send_button = st.form_submit_button("🚀 Send", use_container_width=True)
+        
+        # Process query (either from form or retry)
+        query_to_process = retry_query if retry_query else (query if send_button else None)
+        
+        if query_to_process:
+            # Add user message to history
+            import datetime
+            timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+            
+            st.session_state.chat_history.append({
+                'role': 'user',
+                'content': query_to_process,
+                'timestamp': timestamp
+            })
+            
+            try:
+                # Update DataFrame in agents
+                if current_mode == "Multi-Agent (Recommended)":
+                    st.session_state.supervisor.set_dataframe(st.session_state.df)
+                    
+                    with st.spinner("🤖 Thinking..."):
+                        result = st.session_state.supervisor.process_query(query_to_process)
+                    
+                    # Add assistant response to history
+                    st.session_state.chat_history.append({
+                        'role': 'assistant',
+                        'content': result['response'],
+                        'agent': result['agent'],
+                        'timestamp': datetime.datetime.now().strftime("%H:%M:%S"),
+                        'plot': result.get('plot', None)
+                    })
+                else:
+                    # Single agent mode
+                    with st.spinner("🤖 Thinking..."):
+                        response = st.session_state.agent.run(query)
+                    
+                    # Add assistant response to history
+                    st.session_state.chat_history.append({
+                        'role': 'assistant',
+                        'content': response,
+                        'agent': 'Mistral',
+                        'timestamp': datetime.datetime.now().strftime("%H:%M:%S")
+                    })
+                
+                # Rerun to show updated chat
+                st.rerun()
+                        
+            except Exception as e:
+                st.session_state.chat_history.append({
+                    'role': 'assistant',
+                    'content': f"❌ **Error**: {str(e)}\n\nTry rephrasing your question or use simpler queries.",
+                    'agent': 'System',
+                    'timestamp': datetime.datetime.now().strftime("%H:%M:%S")
+                })
+                st.rerun()
+        
+        elif send_button and not query and not retry_query:
+            st.warning("⚠️ Please enter a message.")
     
     # ===== TAB 6: EXPORT =====
     with tab6:

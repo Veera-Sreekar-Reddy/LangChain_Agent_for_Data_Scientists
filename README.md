@@ -35,12 +35,14 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 ## ✨ Features
 
 ### 📊 Overview & Analytics
+
 - 📂 Upload CSV files with instant statistics
 - 🔍 Comprehensive dataset exploration (columns, dtypes, missing values)
 - 📈 Automated statistics dashboard
 - 📋 One-click EDA reports with `ydata-profiling`
 
 ### 🧹 Advanced Data Cleaning ⭐
+
 - **🤖 Auto-Clean Modes**: Light, Standard, Aggressive
 - **🔴 Missing Values**: 6 strategies (mean, median, mode, KNN, drop, fill)
 - **🔄 Duplicates**: Smart duplicate removal with keep options
@@ -52,6 +54,7 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 - **📋 Detailed Logging**: Track all cleaning operations with before/after comparison
 
 ### 📈 Interactive Visualizations (10+ types)
+
 - **Scatter plots** with color coding and 3D scatter
 - **Box plots** and **Violin plots**
 - **Histograms** and distribution plots
@@ -61,6 +64,7 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 - All interactive with Plotly (zoom, pan, hover)
 
 ### 🤖 Machine Learning
+
 - **Multi-model comparison**: Random Forest, XGBoost, Logistic/Linear Regression
 - **Visual results**: Confusion matrices, prediction plots
 - **Performance metrics**: Accuracy, R², MSE, MAE
@@ -68,6 +72,7 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 - **AI-powered model suggestions**
 
 ### 💬 Multi-Agent AI Assistant ⭐
+
 - **Dual AI System**: Mistral (reasoning) + CodeLLaMA (code generation)
 - **Smart Routing**: Automatically selects appropriate agent
 - **Natural Language**: Ask questions in plain English
@@ -76,6 +81,7 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 - **Safe Execution**: Sandboxed code environment
 
 ### 📥 Export Capabilities
+
 - Download cleaned CSV
 - Export to Excel (.xlsx)
 - Generate summary reports (TXT)
@@ -86,6 +92,7 @@ A **production-ready Streamlit application** with multi-agent AI system for inte
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.8+
 - Ollama installed
 - 8GB+ RAM recommended
@@ -115,6 +122,7 @@ streamlit run app.py
 ```
 
 ### Verify Models
+
 ```bash
 ollama list
 # Should show:
@@ -123,6 +131,7 @@ ollama list
 ```
 
 ### Access Application
+
 Open your browser and navigate to: **http://localhost:8501**
 
 ---
@@ -158,6 +167,7 @@ Intelligent Routing
 ### Query Examples
 
 #### → Mistral (Reasoning)
+
 ```
 "Summarize the dataset"
 "Explain correlations in this data"
@@ -167,6 +177,7 @@ Intelligent Routing
 ```
 
 #### → CodeLLaMA (Code Generation)
+
 ```
 "Create a scatter plot of price vs duration"
 "Plot histogram of age distribution"
@@ -184,15 +195,16 @@ The Supervisor analyzes queries and routes based on keywords:
 
 ### Benefits
 
-✅ **Specialization**: Each agent excels at specific tasks  
-✅ **Better Quality**: CodeLLaMA generates cleaner code, Mistral provides better insights  
-✅ **Faster**: Optimized routing reduces response time  
-✅ **Scalable**: Easy to add more specialized agents  
-✅ **Flexible**: Can switch between multi-agent and single-agent modes  
+✅ **Specialization**: Each agent excels at specific tasks
+✅ **Better Quality**: CodeLLaMA generates cleaner code, Mistral provides better insights
+✅ **Faster**: Optimized routing reduces response time
+✅ **Scalable**: Easy to add more specialized agents
+✅ **Flexible**: Can switch between multi-agent and single-agent modes
 
 ### Usage
 
 **In the UI:**
+
 1. Select **"Multi-Agent (Recommended)"** in sidebar
 2. Go to **"💬 AI Assistant"** tab
 3. Type your question
@@ -200,6 +212,7 @@ The Supervisor analyzes queries and routes based on keywords:
 5. View generated code (for CodeLLaMA) or analysis (for Mistral)
 
 **Programmatically:**
+
 ```python
 from multi_agent import create_multi_agent
 
@@ -222,11 +235,13 @@ Production-ready data cleaning with 10+ strategies, detailed logging, and intera
 ### Auto-Clean Modes
 
 #### 🌟 Light
+
 - Remove duplicates
 - Handle missing values (basic imputation)
 - **Best for**: Quick cleaning, exploratory analysis
 
 #### 🌟 Standard (Recommended)
+
 - Everything in Light, plus:
 - Outlier detection (IQR method)
 - Categorical encoding (Label)
@@ -234,6 +249,7 @@ Production-ready data cleaning with 10+ strategies, detailed logging, and intera
 - **Best for**: Most use cases, ML preparation
 
 #### 🌟 Aggressive
+
 - Everything in Standard, plus:
 - Remove constant columns
 - Remove high cardinality columns (IDs)
@@ -244,6 +260,7 @@ Production-ready data cleaning with 10+ strategies, detailed logging, and intera
 #### 1. 🔴 Missing Values
 
 **Strategies:**
+
 - **auto**: Smart imputation (mean/median for numeric, mode for categorical)
 - **drop**: Remove rows with missing values
 - **impute**: Custom methods
@@ -254,6 +271,7 @@ Production-ready data cleaning with 10+ strategies, detailed logging, and intera
 - **fill_backward**: Backward fill
 
 **When to Use:**
+
 ```python
 # Financial data - use median (robust to outliers)
 strategy='impute', numeric_method='median'
@@ -268,6 +286,7 @@ strategy='fill_forward'
 #### 2. 🔄 Duplicates
 
 **Options:**
+
 - `keep='first'`: Keep first occurrence
 - `keep='last'`: Keep last occurrence (transaction data)
 - `keep=False`: Remove all duplicates
@@ -275,11 +294,13 @@ strategy='fill_forward'
 #### 3. 📊 Outliers
 
 **IQR Method (Interquartile Range):**
+
 - Threshold 1.5: Standard (catches extreme outliers)
 - Threshold 2.0: Moderate
 - Threshold 3.0: Conservative
 
 **Z-Score Method:**
+
 - Threshold 2.0: Aggressive (2 std devs)
 - Threshold 3.0: Standard (3 std devs)
 
@@ -288,38 +309,43 @@ strategy='fill_forward'
 #### 4. 🔤 Encoding
 
 **Label Encoding:**
+
 - Converts categories to numbers: A=0, B=1, C=2
 - Best for: Tree-based models, ordinal data
 
 **One-Hot Encoding:**
+
 - Creates binary columns for each category
 - Best for: Linear models, few categories (<10)
 
 #### 5. 📏 Scaling
 
-**Standard Scaling**: Mean=0, Std=1 (best for normal distribution)  
-**MinMax Scaling**: Scales to [0, 1] (best for neural networks)  
+**Standard Scaling**: Mean=0, Std=1 (best for normal distribution)
+**MinMax Scaling**: Scales to [0, 1] (best for neural networks)
 **Robust Scaling**: Uses median and IQR (best for outliers)
 
 **When to Scale:**
+
 - ✅ SVM, Neural Networks, KNN, Linear Regression
 - ❌ Tree-based models (Random Forest, XGBoost)
 
 #### 6. 💾 Memory Optimization
 
 Automatically optimizes data types:
+
 - `int64` → `int8/16/32` (based on value range)
 - `float64` → `float32`
 - **Result**: 50-90% memory reduction
 
 #### 7. 🗑️ Column Removal
 
-**Constant Columns**: Only one unique value (no information)  
+**Constant Columns**: Only one unique value (no information)
 **High Cardinality**: >95% unique values (likely IDs)
 
 ### Cleaning Report
 
 Example output:
+
 ```
 🧹 DATA CLEANING REPORT
 ======================================================================
@@ -344,6 +370,7 @@ Memory: 1.25 MB → 0.65 MB
 ### Usage
 
 **In the UI:**
+
 1. Upload CSV file
 2. Go to **"🧹 Data Cleaning"** tab
 3. Choose auto-clean level OR use manual controls
@@ -352,6 +379,7 @@ Memory: 1.25 MB → 0.65 MB
 6. See cleaned data preview
 
 **Programmatically:**
+
 ```python
 from tools import DataCleaner
 
@@ -519,23 +547,27 @@ LangChain_Agent_for_Data_Scientists/
 ### `agents/` - AI Agents Package
 
 #### `single_agent.py`
+
 - **Purpose**: Single Mistral agent for general data science tasks
 - **Function**: `create_agent()` → Returns (agent, ds_tools)
 - **Use Case**: Simple queries, single-model inference
 
-#### `supervisor_agent.py`  
+#### `supervisor_agent.py`
+
 - **Purpose**: Routes queries to specialized agents
 - **Class**: `SupervisorAgent`
 - **Methods**: `route_query()`, `process_query()`, `set_dataframe()`
 - **Use Case**: Multi-agent orchestration
 
 #### `reasoning_agent.py`
+
 - **Purpose**: Mistral agent for analysis and reasoning
 - **Class**: `ReasoningAgent`
 - **Tools**: Summarize, Correlations, Explore, Column Info, Clean
 - **Use Case**: Data summaries, statistical analysis
 
 #### `code_agent.py`
+
 - **Purpose**: CodeLLaMA for Python code generation
 - **Class**: `CodeGeneratorAgent`
 - **Methods**: `generate_and_execute_code()`, `_execute_code_safely()`
@@ -544,6 +576,7 @@ LangChain_Agent_for_Data_Scientists/
 ### `tools/` - Data Science Tools Package
 
 #### `data_science_tools.py`
+
 - **Purpose**: Core data science operations
 - **Class**: `DataScienceTools`
 - **Methods**:
@@ -553,6 +586,7 @@ LangChain_Agent_for_Data_Scientists/
   - `generate_plot()`, `suggest_model()`, `train_models()`
 
 #### `data_cleaner.py`
+
 - **Purpose**: Advanced data cleaning with multiple strategies
 - **Class**: `DataCleaner`
 - **Methods**:
@@ -564,6 +598,7 @@ LangChain_Agent_for_Data_Scientists/
   - `get_cleaning_report()`, `reset()`
 
 #### `data_retriever.py`
+
 - **Purpose**: FAISS-based vector retrieval
 - **Class**: `DataRetriever`
 - **Methods**: `index_dataframe()`, `get_retriever()`
@@ -681,11 +716,12 @@ ds_tools.train_models(df, target, models, test_size)
 #### ✅ Do:
 
 1. **Always review data first**
+
    - Check Overview tab
    - Understand missing patterns
    - Identify outliers visually
-
 2. **Clean incrementally**
+
    ```
    1. Remove duplicates
    2. Handle missing values
@@ -693,18 +729,18 @@ ds_tools.train_models(df, target, models, test_size)
    4. Encode categorical (for ML only)
    5. Scale features (for ML only)
    ```
-
 3. **Use appropriate strategies**
+
    - EDA: Light cleaning, keep outliers
    - ML: Standard cleaning, handle outliers
    - Production: Aggressive, optimize memory
-
 4. **Read cleaning reports**
+
    - Verify operations make sense
    - Check rows/columns removed
    - Validate results
-
 5. **Keep original data**
+
    - Use Reset button if needed
    - Save cleaned data separately
 
@@ -721,22 +757,23 @@ ds_tools.train_models(df, target, models, test_size)
 #### ✅ Do:
 
 1. **Be specific in queries**
+
    - ✅ "Create scatter plot of price vs duration"
    - ❌ "Show me the data"
-
 2. **Mention column names**
+
    - ✅ "Plot histogram of age column"
    - ❌ "Make a histogram"
-
 3. **Use action words**
+
    - Analysis: summarize, explain, analyze, describe
    - Visualization: create, plot, generate, show
-
 4. **Check agent responses**
+
    - See which agent handled query
    - Verify routing makes sense
-
 5. **Start simple**
+
    - Test with basic queries first
    - Build up to complex requests
 
@@ -754,14 +791,18 @@ ds_tools.train_models(df, target, models, test_size)
 ### Common Issues
 
 #### Issue: "Ollama server not responding"
+
 **Solution:**
+
 ```bash
 ollama serve
 # Wait 3-5 seconds for startup
 ```
 
 #### Issue: "Model not found"
+
 **Solution:**
+
 ```bash
 ollama pull mistral
 ollama pull codellama
@@ -769,36 +810,47 @@ ollama list  # Verify
 ```
 
 #### Issue: Wrong agent selected
+
 **Solution:** Be more specific in query
+
 - ❌ "Show me data" → Ambiguous
 - ✅ "Summarize the dataset" → Mistral
 - ✅ "Create scatter plot" → CodeLLaMA
 
 #### Issue: Code generation fails
+
 **Causes:**
+
 1. Column names don't exist
 2. Wrong data type for operation
 3. Query too complex
 
 **Solution:**
+
 - Check DataFrame columns
 - Simplify query
 - Try manual visualization in Visualizations tab
 
 #### Issue: Too much data removed
+
 **Solution:**
+
 - Use less aggressive threshold (2.0 or 3.0)
 - Check cleaning report
 - Reset and try different strategy
 
 #### Issue: Memory error
+
 **Solution:**
+
 - Optimize dtypes first
 - Sample large datasets: `df.sample(10000)`
 - Process in chunks
 
 #### Issue: Encoding creates too many columns
+
 **Solution:**
+
 - Use label encoding instead of one-hot
 - Remove high cardinality columns first
 - Combine rare categories
@@ -806,16 +858,19 @@ ollama list  # Verify
 ### Performance Tips
 
 **Large Datasets (>100K rows):**
+
 1. Sample first: `df_sample = df.sample(10000)`
 2. Use efficient methods (mean/median, not KNN)
 3. Optimize dtypes early
 
 **Many Columns (>50):**
+
 1. Select relevant columns first
 2. Remove high cardinality early
 3. Use label encoding
 
 **Slow Queries:**
+
 1. Reduce max_iterations (in `agent.py`)
 2. Use Single Agent mode
 3. Simplify queries
@@ -825,11 +880,13 @@ ollama list  # Verify
 ## ⚙️ Tech Stack
 
 ### Frontend
+
 - **Streamlit**: Web interface
 - **Plotly**: Interactive visualizations
 - **Matplotlib/Seaborn**: Static plots
 
 ### AI/ML
+
 - **LangChain**: Agent framework
 - **Ollama**: Local LLM hosting
 - **Mistral 7B**: Reasoning agent
@@ -839,6 +896,7 @@ ollama list  # Verify
 - **SHAP**: Model explainability
 
 ### Data Processing
+
 - **Pandas**: Data manipulation
 - **NumPy**: Numerical computing
 - **SciPy**: Statistical functions
@@ -846,6 +904,7 @@ ollama list  # Verify
 - **imbalanced-learn**: Sampling methods
 
 ### Storage & Export
+
 - **openpyxl**: Excel export
 - **FAISS**: Vector storage (for future features)
 
@@ -877,16 +936,19 @@ openpyxl
 ## 🧪 Testing
 
 ### Test Multi-Agent System
+
 ```bash
 python test_multi_agent.py
 ```
 
 ### Test Data Cleaning
+
 ```bash
 python test_data_cleaning.py
 ```
 
 ### Test in UI
+
 ```bash
 streamlit run app.py
 # 1. Upload sample CSV
@@ -900,17 +962,20 @@ streamlit run app.py
 ## 🚀 Deployment
 
 ### Local Development
+
 ```bash
 ollama serve &
 streamlit run app.py
 ```
 
 ### Docker (Coming Soon)
+
 ```bash
 docker-compose up
 ```
 
 ### Cloud Deployment
+
 - Requires GPU for Ollama models (8GB+ VRAM)
 - Or use cloud LLM APIs (OpenAI, Anthropic)
 - Configure in environment variables
@@ -920,6 +985,7 @@ docker-compose up
 ## 🤝 Contributing
 
 Contributions welcome! Areas for improvement:
+
 - [ ] Additional cleaning strategies
 - [ ] More specialized agents (SQL, Time Series, NLP)
 - [ ] Support for more file formats
@@ -957,6 +1023,7 @@ MIT License - see LICENSE file for details
 ## 🎉 Quick Reference
 
 ### Common Commands
+
 ```bash
 # Start Ollama
 ollama serve &
@@ -974,6 +1041,7 @@ python test_data_cleaning.py
 ```
 
 ### Quick Queries
+
 ```
 Analysis (Mistral):
 - "Summarize the data"
@@ -987,6 +1055,7 @@ Visualization (CodeLLaMA):
 ```
 
 ### Quick Cleaning
+
 ```python
 # UI: Data Cleaning tab → Auto-Clean (Standard)
 
@@ -996,10 +1065,6 @@ cleaner = DataCleaner(df)
 cleaner.auto_clean(level='standard')
 cleaned_df = cleaner.get_cleaned_dataframe()
 ```
-
----
-
-**Built with ❤️ using AI and Open Source**
 
 **Star ⭐ this repo if you find it useful!**
 

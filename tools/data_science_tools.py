@@ -69,17 +69,26 @@ class DataScienceTools:
         else:
             summary += "\n✅ No missing values\n"
         
-        # Numeric summary
+        # Numeric summary - Show ALL numeric columns
         numeric_cols = self.df.select_dtypes(include=['number']).columns
         if len(numeric_cols) > 0:
             summary += f"\n📈 Numeric Columns Summary ({len(numeric_cols)} columns):\n"
-            summary += self.df[numeric_cols].describe().to_string()
+            for col in numeric_cols:
+                col_stats = self.df[col].describe()
+                summary += f"\n{col}:\n"
+                summary += f"  Mean: {col_stats['mean']:.6f}\n"
+                summary += f"  Std:  {col_stats['std']:.6f}\n"
+                summary += f"  Min:  {col_stats['min']:.6f}\n"
+                summary += f"  25%:  {col_stats['25%']:.6f}\n"
+                summary += f"  50%:  {col_stats['50%']:.6f}\n"
+                summary += f"  75%:  {col_stats['75%']:.6f}\n"
+                summary += f"  Max:  {col_stats['max']:.6f}\n"
         
-        # Categorical summary
+        # Categorical summary - Show ALL categorical columns
         cat_cols = self.df.select_dtypes(include=['object']).columns
         if len(cat_cols) > 0:
             summary += f"\n\n📋 Categorical Columns ({len(cat_cols)} columns):\n"
-            for col in cat_cols[:5]:
+            for col in cat_cols:
                 summary += f"  - {col}: {self.df[col].nunique()} unique values\n"
         
         # Duplicates

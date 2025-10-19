@@ -23,18 +23,31 @@ class SupervisorAgent:
     def route_query(self, query: str) -> str:
         """Determine which agent should handle the query"""
         
+        query_lower = query.lower()
+        
+        # Check for correlation + visualization keywords
+        correlation_keywords = ['correlation', 'correlations', 'relationship']
+        viz_keywords = ['heat map', 'heatmap', 'plot', 'chart', 'graph', 'visualization', 'visualize', 'show']
+        
+        has_correlation = any(kw in query_lower for kw in correlation_keywords)
+        has_viz = any(kw in query_lower for kw in viz_keywords)
+        
+        # If asking for correlation WITH visualization, route to CODE
+        if has_correlation and has_viz:
+            return "CODE"
+        
         routing_prompt = f"""
 Analyze this user query and decide which agent should handle it:
 
 Query: "{query}"
 
 Available agents:
-1. REASONING - For data summaries, correlations, exploration, column info, data cleaning
+1. REASONING - For data summaries, correlations (text), exploration, column info, data cleaning
 2. CODE - For generating plots, visualizations, data transformations, custom analysis
 
 If the query asks for:
-- Summary, overview, correlations, describe, explore, column info → REASONING
-- Plot, chart, graph, visualization, histogram, scatter, transform, calculate → CODE
+- Summary, overview, text-based correlations, describe, explore, column info → REASONING
+- Plot, chart, graph, visualization, histogram, scatter, heatmap, transform, calculate → CODE
 
 Answer with ONLY one word: REASONING or CODE
 """
@@ -54,31 +67,85 @@ Answer with ONLY one word: REASONING or CODE
         
         try:
             if agent_type == "CODE":
-                response = self.code_agent.generate_and_execute_code(query)
+                result = self.code_agent.generate_and_execute_code(query)
+                
+                # Format response for display
+                if result['success']:
+                    # Check if this is a heatmap/correlation visualization
+                    query_lower = query.lower()
+                    is_heatmap = 'heatmap' in query_lower or 'heat map' in query_lower
+                    is_correlation = 'correlation' in query_lower or 'correlations' in query_lower
+                    
+                    if result.get('plot') and (is_heatmap or is_correlation):
+                        # Provide a concise summary for heatmap
+                        response = "📊 **Correlation Heatmap Generated!**\n\n"
+                        response += "**Summary:**\n"
+                        response += "• The heatmap visualizes correlations between all numeric variables in your dataset\n"
+                        response += "• Red/warm colors indicate strong positive correlations (variables increase together)\n"
+                        response += "• Blue/cool colors indicate strong negative correlations (one increases, other decreases)\n"
+                        response += "• White/neutral colors indicate weak or no correlation\n"
+                        response += "• Values range from -1 (perfect negative) to +1 (perfect positive)\n\n"
+                        response += "**Key Insights:**\n"
+                        response += "• Look for dark red or dark blue cells for strongest relationships\n"
+                        response += "• Diagonal is always 1 (variable correlates perfectly with itself)\n"
+                        response += "• Use this to identify which variables are most related to each other\n\n"
+                        response += f"**Generated Code:**\n```python\n{result['code']}\n```"
+                    else:
+                        response = f"✅ Code executed successfully!\n\n**Generated Code:**\n```python\n{result['code']}\n```\n\n**Output:**\n{result['output']}"
+                else:
+                    response = f"❌ Error: {result['error']}"
+                
                 return {
                     "agent": "CodeLLaMA",
                     "response": response,
-                    "success": True
+                    "success": result['success'],
+                    "plot": result.get('plot', None)
                 }
             else:
-                # Create reasoning agent with tools
-                tools = self.reasoning_agent.create_tools()
-                agent = initialize_agent(
-                    tools,
-                    self.reasoning_agent.llm,
-                    agent="zero-shot-react-description",
-                    verbose=True,
-                    handle_parsing_errors=True,
-                    max_iterations=5,
-                    max_execution_time=60,
-                    early_stopping_method="generate"
-                )
-                response = agent.run(query)
-                return {
-                    "agent": "Mistral",
-                    "response": response,
-                    "success": True
-                }
+                # Check for direct tool calls to avoid LLM summarization
+                query_lower = query.lower()
+                
+                # Direct tool execution for summary queries to avoid truncation
+                if any(keyword in query_lower for keyword in ['summary', 'summarize', 'describe', 'overview']):
+                    response = self.reasoning_agent.ds_tools.summarize_data()
+                    return {
+                        "agent": "Mistral",
+                        "response": response,
+                        "success": True
+                    }
+                elif any(keyword in query_lower for keyword in ['correlation', 'correlations', 'relationship']):
+                    response = self.reasoning_agent.ds_tools.analyze_correlations()
+                    return {
+                        "agent": "Mistral",
+                        "response": response,
+                        "success": True
+                    }
+                elif any(keyword in query_lower for keyword in ['explore', 'show data', 'view data', 'columns']):
+                    response = self.reasoning_agent.ds_tools.explore_data()
+                    return {
+                        "agent": "Mistral",
+                        "response": response,
+                        "success": True
+                    }
+                else:
+                    # Use LangChain agent for complex queries
+                    tools = self.reasoning_agent.create_tools()
+                    agent = initialize_agent(
+                        tools,
+                        self.reasoning_agent.llm,
+                        agent="zero-shot-react-description",
+                        verbose=True,
+                        handle_parsing_errors=True,
+                        max_iterations=5,
+                        max_execution_time=60,
+                        early_stopping_method="generate"
+                    )
+                    response = agent.run(query)
+                    return {
+                        "agent": "Mistral",
+                        "response": response,
+                        "success": True
+                    }
                 
         except Exception as e:
             return {
