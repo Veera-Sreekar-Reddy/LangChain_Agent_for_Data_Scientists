@@ -1016,13 +1016,10 @@ MIT License - see LICENSE file for details
 
 - **Issues**: GitHub Issues
 - **Documentation**: This README
-- **Examples**: `test_*.py` scripts
 
 ---
 
 ## 🎉 Quick Reference
-
-### Common Commands
 
 ```bash
 # Start Ollama
@@ -1065,6 +1062,10 @@ cleaner = DataCleaner(df)
 cleaner.auto_clean(level='standard')
 cleaned_df = cleaner.get_cleaned_dataframe()
 ```
+
+---
+
+**Built with ❤️**
 
 **Star ⭐ this repo if you find it useful!**
 

@@ -37,6 +37,70 @@ class DataScienceTools:
         """Return the DataFrame"""
         return self.df
 
+    def _detect_task_type(self, y: pd.Series) -> str:
+        """
+        Detect if target variable is classification or regression task.
+        
+        Args:
+            y: Target variable series
+            
+        Returns:
+            'classification' or 'regression'
+        """
+        # Handle missing values for analysis
+        y_clean = y.dropna()
+        
+        if len(y_clean) == 0:
+            # Default to regression if no data
+            return "regression"
+        
+        # Check data type first - object/string types are always classification
+        if y_clean.dtype == 'object' or pd.api.types.is_string_dtype(y_clean):
+            return "classification"
+        
+        # For numeric types, use heuristics
+        unique_count = y_clean.nunique()
+        total_count = len(y_clean)
+        unique_ratio = unique_count / total_count
+        
+        # If very few unique values relative to total, likely classification
+        if unique_ratio <= 0.05 and unique_count <= 20:
+            return "classification"
+        
+        # If unique count is small and values are integers, likely classification
+        # (e.g., rating scales: 1-5, age groups, etc.)
+        if unique_count <= 20 and pd.api.types.is_integer_dtype(y_clean):
+            # Check if values are in a small range (e.g., 0-10, 1-5)
+            value_range = y_clean.max() - y_clean.min()
+            if value_range <= 20 and y_clean.min() >= 0:
+                # Check distribution - if values cluster around specific integers
+                value_counts = y_clean.value_counts()
+                # If top 5 values represent >80% of data, likely categorical
+                top_5_ratio = value_counts.head(5).sum() / total_count
+                if top_5_ratio > 0.8:
+                    return "classification"
+        
+        # If unique count is very high relative to total, definitely regression
+        if unique_ratio > 0.9:
+            return "regression"
+        
+        # For numeric with many unique values, treat as regression
+        # (but allow override with small unique count + high ratio threshold)
+        if unique_count > 50:
+            return "regression"
+        
+        # Default to regression for continuous numeric values
+        if pd.api.types.is_float_dtype(y_clean):
+            return "regression"
+        
+        # Conservative default: if we can't determine, check if it looks like IDs
+        # (very high cardinality integers) -> regression
+        if unique_count > total_count * 0.8:
+            return "regression"
+        
+        # Default to regression for ambiguous cases
+        return "regression"
+
     def explore_data(self):
         """Explore dataset - show columns, types, and sample rows"""
         if self.df is None:
@@ -202,22 +266,28 @@ class DataScienceTools:
         if target not in self.df.columns:
             return f"⚠️ Target '{target}' not found."
 
+        # Determine task type using ORIGINAL data before encoding
+        y_original = self.df[target]
+        task = self._detect_task_type(y_original)
+
         df_clean = self.df.copy()
 
-        # Encode categorical columns
+        # Encode categorical columns (excluding target for now)
         for col in df_clean.select_dtypes(include=["object"]).columns:
-            df_clean[col] = LabelEncoder().fit_transform(df_clean[col].astype(str))
+            if col != target:
+                df_clean[col] = LabelEncoder().fit_transform(df_clean[col].astype(str))
 
         X = df_clean.drop(columns=[target])
         y = df_clean[target]
-
-        # Determine task type
-        if y.nunique() <= 10:
+        
+        # Encode target if it's categorical (classification task)
+        if y.dtype == 'object' or (task == "classification" and pd.api.types.is_integer_dtype(y) and y.nunique() <= 20):
+            y = LabelEncoder().fit_transform(y.astype(str))
+        
+        if task == "classification":
             model = RandomForestClassifier()
-            task = "classification"
         else:
             model = RandomForestRegressor()
-            task = "regression"
 
         # Split and fit
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -342,19 +412,20 @@ class DataScienceTools:
             if col != target_column:
                 df_clean[col] = LabelEncoder().fit_transform(df_clean[col].astype(str))
         
-        # Separate features and target
+        # Separate features and target (use original for task detection)
         X = df_clean.drop(columns=[target_column])
+        y_original = df[target_column]  # Use original before encoding
+        
+        # Determine task type BEFORE encoding (using original data)
+        task_type = self._detect_task_type(y_original)
+        
+        # Now get target from cleaned dataframe and encode if needed
         y = df_clean[target_column]
         
-        # Encode target if categorical
-        if y.dtype == 'object':
-            y = LabelEncoder().fit_transform(y.astype(str))
-        
-        # Determine task type
-        if y.nunique() <= 10:
-            task_type = "classification"
-        else:
-            task_type = "regression"
+        # Encode target if categorical (for classification tasks)
+        if y.dtype == 'object' or (task_type == "classification" and pd.api.types.is_integer_dtype(y) and y.nunique() <= 20):
+            label_encoder = LabelEncoder()
+            y = label_encoder.fit_transform(y.astype(str))
         
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
